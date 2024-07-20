@@ -15,6 +15,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 var welcomeMsg = "Welcome to the graceful server! 💃🏼\n"
@@ -31,17 +32,17 @@ func withSimpleLogger(handler http.Handler) http.Handler {
 	})
 }
 
-/*
- * Add middleware function here
- * func ...(..)...{..}
- */
+func withExecutionTime(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		startTime := time.Now()
+		handler.ServeHTTP(w, r)
+		defer log.Default().Printf("Execution time - %d µs", time.Since(startTime).Milliseconds())
+	})
+
+}
 
 func (server *gracefulServer) preStart() {
-	currentHandler := server.httpServer.Handler
-	loggerHandler := withSimpleLogger(currentHandler)
-	// INSERT CODE HERE
-	// myNewTimeHandler := ???
-	server.httpServer.Handler = loggerHandler // EDIT THIS ONCE DONE
+	server.httpServer.Handler = withExecutionTime(withSimpleLogger(server.httpServer.Handler)) // chain the middleware
 }
 
 func (server *gracefulServer) start() error {
