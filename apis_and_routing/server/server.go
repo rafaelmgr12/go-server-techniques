@@ -28,6 +28,7 @@ func NewServer(port string) *GracefulServer {
 	router.Get("/greeting/{name}", greetingHandler)
 
 	// ADD ROUTE HERE AND ADD HANDLER IN handlers.go
+	router.Get("/users", findUser)
 
 	httpServer := &http.Server{Addr: ":" + port, Handler: router}
 	return &GracefulServer{httpServer: httpServer}
