@@ -1,9 +1,21 @@
 package api
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
+
+	"github.com/rafaelmgr12/go-server-techniques/custom_api/users"
 )
+
+type fakeUsersAPIResponse struct {
+	Data []users.FakeUser `json:"data"`
+}
+
+type apiUser struct {
+	Name   string `json:"name"`
+	Gender string `json:"gender"`
+}
 
 func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
 	res, err := http.Get("https://fakerapi.it/api/v1/persons")
@@ -17,6 +29,17 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resData, _ := io.ReadAll(res.Body)
-	w.Write(resData)
+	var fakeUsers fakeUsersAPIResponse
+	_ = json.Unmarshal(resData, &fakeUsers)
+
+	var resp []apiUser
+	for i := 0; i < len(fakeUsers.Data); i++ {
+		resp = append(resp, apiUser{
+			Name:   fakeUsers.Data[i].FirstName + " " + fakeUsers.Data[i].LastName,
+			Gender: fakeUsers.Data[i].Gender,
+		})
+	}
+	respBytes, _ := json.Marshal(resp)
+	w.Write(respBytes)
 
 }
